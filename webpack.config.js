@@ -1,9 +1,16 @@
 const path = require('path');
+const glob = require('glob')
 const htmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin'); // plugin 一定要引入，且要加在 plugins 裡面
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
- 
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const webpack = require('webpack')
+const PurgeCSSPlugin = require('purgecss-webpack-plugin')
+
+const PATHS = {
+    src: path.join(__dirname, 'src')
+  }
 
 const config = {
     entry: {
@@ -27,6 +34,10 @@ const config = {
             {
                 test: /\.(png|jpg|gif)$/,
                 use: ["file-loader"]
+            },
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader'
             }
         ]
     },
@@ -42,12 +53,23 @@ const config = {
             template: "./src/index.html"
         }),
         new CleanWebpackPlugin(),
-        new BundleAnalyzerPlugin()
+        new BundleAnalyzerPlugin(),
+        new VueLoaderPlugin(),
+        new webpack.ProvidePlugin({
+            '$': 'jquery',
+            'jQuery': 'jquery'
+        }),
+        new PurgeCSSPlugin({
+            paths: glob.sync(`${PATHS.src}/*`,  { nodir: true }),
+            whitelist: function () {
+                return ['hello'];
+            }
+        }),
     ],
     devtool: "inline-source-map",
-    externals: {
-        jquery: 'jQuery'
-    },
+    // externals: {
+    //     jquery: 'jQuery'
+    // },
     optimization: {
         runtimeChunk: 'single',
         splitChunks: {
